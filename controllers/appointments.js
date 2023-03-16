@@ -52,7 +52,7 @@ exports.getAppointment = async (req,res,next) => {
   }
 }
 
-exports.addAppoointment = async (req,res,next) => {
+exports.addAppointment = async (req,res,next) => {
   try {
     //add user Id to req.body
     req.body.user = req.user.id;
