@@ -1,5 +1,5 @@
 const express = require('express');
-const { getHospitals, getHospital, createHospital, updateHospital, deleteHospital } = require('../controllers/hospitals');
+const { getHospitals, getHospital, createHospital, updateHospital, deleteHospital, getVacCenters } = require('../controllers/hospitals');
 
 //Include other resource routers
 const appointmentRouter = require('./appointments');
@@ -8,6 +8,8 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 
 router.use('/:hospitalId/appointments/', appointmentRouter);
+
+router.route('/vacCenters').get(getVacCenters);
 
 router.route('/')
     .get(getHospitals)
