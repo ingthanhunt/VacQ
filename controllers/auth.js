@@ -18,26 +18,43 @@ exports.register = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    const {email, password} = req.body;
-    //Validate email & password
-    if(!email || !password) {
-        return res.status(400).json({success:false, 
-            msg:'Please provide an email and password'});
+    try {
+        const {email, password} = req.body; 
+        //Validate email & password
+        if(!email || !password) {
+            return res.status(400).json({success:false, 
+                msg:'Please provide an email and password'});
+        }
+        //Check for user
+        const user = await User.findOne({email}).select('+password');
+        if(!user) {
+            return res.status(400).json({success:false, 
+                msg:'Invalid credentials'});
+        }
+        //Check if password matches
+        const isMatch = await user.matchPassword(password);
+        if(!isMatch) {
+            return res.status(401).json({success:false, 
+                msg:'Invalid credentials'})
+        }
+        sendTokenResponse(user, 200, res);
+    } catch (error) {
+        return res.status(401).json({success:false, msg:'Cannot convert email or password to string'});
     }
-    //Check for user
-    const user = await User.findOne({email}).select('+password');
-    if(!user) {
-        return res.status(400).json({success:false, 
-            msg:'Invalid credentials'});
-    }
-    //Check if password matches
-    const isMatch = await user.matchPassword(password);
-    if(!isMatch) {
-        return res.status(401).json({success:false, 
-            msg:'Invalid credentials'})
-    }
-    sendTokenResponse(user, 200, res);
+   
 };
+
+exports.logout = async (req, res, next) => {
+    res.cookie('token', 'none', {
+        expires: new Date(Date.now() + 10*1000),
+        httpOnly: true
+    });
+
+    res.status(200).json({
+        success: true,
+        data: {}
+    });
+}
 
 const sendTokenResponse = (user, statusCode, res) => {
     //Create token
@@ -51,6 +68,11 @@ const sendTokenResponse = (user, statusCode, res) => {
     }
     res.status(statusCode).cookie('token', token, options).json({
         success: true,
+        //add for frontend
+        _id:user._id,
+        name: user.name,
+        email: user.email,
+        //end for frontend
         token
     })
 }
